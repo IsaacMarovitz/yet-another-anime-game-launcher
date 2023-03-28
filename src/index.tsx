@@ -9,14 +9,7 @@ function createPlates(tag: string, color: any, colortag:string) {
   return Object.fromEntries((new Array(12)).fill(1).map((_,i)=>[`${tag}${i+1}`,color[`${colortag}${i+1}`] as string] as const));
 }
 
-if (typeof Neutralino == "undefined") {
-  console.log(`This app doesn't work on browser.`);
-} else {
-  Neutralino.init();
-  if (import.meta.env.PROD) {
-    document.addEventListener("contextmenu", (event) => event.preventDefault());
-  }
-  createApp()
+createApp()
     .then((UI) => {
       render(
         () => (
@@ -32,7 +25,5 @@ if (typeof Neutralino == "undefined") {
         ),
         document.getElementById("root") as HTMLElement
       );
-      Neutralino.window.show();
     })
     .catch(fatal);
-}
