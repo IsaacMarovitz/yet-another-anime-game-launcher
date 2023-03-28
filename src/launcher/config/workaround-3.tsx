@@ -3,6 +3,8 @@ import { createEffect, createSignal } from "solid-js";
 import { Locale } from "../../locale";
 import { getKey, setKey } from "../../utils";
 import { Config, NOOP } from "./config-def";
+import { invoke } from '@tauri-apps/api/tauri'
+import { Command } from "@tauri-apps/api/shell";
 
 declare module "./config-def" {
   interface Config {
@@ -22,11 +24,17 @@ export async function createWorkaround3Config({
   try {
     config.workaround3 = (await getKey(CONFIG_KEY)) == "true";
   } catch {
-    const { model } = await Neutralino.computer.getCPUInfo();
+    const model = await invoke('get_model');
+    const commandResult = await new Command("printenv", "YAAGL_OVERSEA").execute();
+    if (commandResult.code !== 0) {
+      throw new Error(commandResult.stderr);
+    }
+
+    const isOverseaVersion = commandResult.stdout == "1";
     config.workaround3 =
-      (await Neutralino.os.getEnv("YAAGL_OVERSEA")) == "1"
+      isOverseaVersion
         ? false
-        : model.includes("Apple") // HACK: the app runs on rosetta
+        : model == "Apple" // HACK: the app runs on rosetta
         ? true
         : false; // default value
   }
