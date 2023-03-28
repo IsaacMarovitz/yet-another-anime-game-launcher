@@ -1,5 +1,6 @@
 import { Locale } from "./locale";
 import { log } from "./utils";
+import { homeDir } from '@tauri-apps/api/path';
 
 export async function createGameInstallationDirectorySanitizer({
   openFolderDialog,
@@ -8,7 +9,8 @@ export async function createGameInstallationDirectorySanitizer({
   openFolderDialog: () => Promise<string>;
   locale: Locale;
 }) {
-  const HOME = await Neutralino.os.getEnv("HOME");
+
+  const HOME = await homeDir();
   await log(`HOME:`+HOME);
 
   async function selectPath(): Promise<string> {

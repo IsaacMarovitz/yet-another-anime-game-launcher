@@ -24,6 +24,7 @@ import { checkAndDownloadMoltenVK } from "./downloadable-resource";
 import { ensureHosts } from "./hosts";
 import { ENSURE_HOSTS } from "./constants/server_secret";
 import cpu_db from "./constants/cpu_db";
+import { invoke } from '@tauri-apps/api/tauri'
 
 export async function createWine(options: {
   loaderBin: string;
@@ -124,18 +125,16 @@ export async function createWine(options: {
     await setKey("wine_netbiosname", netbiosname);
   }
 
-  const cpuInfo = await Neutralino.computer.getCPUInfo();
-  await log(JSON.stringify(cpuInfo));
+  const cpuModel = await invoke('get_model');
+  const cpuLogicalThreads = await invoke('get_thread_count');
   const fakeCpu: {} =
-    cpuInfo.model.indexOf("Apple") >= 0
-      ? cpuInfo.logicalThreads in cpu_db
-        ? {
-            GIWINECPUNAME: cpu_db[cpuInfo.logicalThreads as 8][0].name,
-            GIWINECPUFREQ: cpu_db[cpuInfo.logicalThreads as 8][0].frequency,
-            GIWINECPUVID: cpu_db[cpuInfo.logicalThreads as 8][0].vendor,
-          }
-        : {}
-      : {};
+    cpuModel == "Apple"
+      ? {
+        GIWINECPUNAME: cpu_db[cpuLogicalThreads as 8][0].name,
+        GIWINECPUFREQ: cpu_db[cpuLogicalThreads as 8][0].frequency,
+        GIWINECPUVID: cpu_db[cpuLogicalThreads as 8][0].vendor,
+      }
+    : {};
 
   return {
     exec,

@@ -20,18 +20,12 @@ import { createLocale } from "./locale";
 import { CROSSOVER_LOADER } from "./crossover";
 import { CN_SERVER, OS_SERVER } from "./constants";
 import { rawString } from "./command-builder";
+import { Command } from "@tauri-apps/api/shell";
 
 export async function createApp() {
   await setKey("singleton", null);
 
   let aria2_port = 6868;
-
-  await Neutralino.events.on("ready", async () => {});
-  await Neutralino.events.on("windowClose", async () => {
-    if (await GLOBAL_onClose(false)) {
-      Neutralino.app.exit(0);
-    }
-  });
 
   const locale = await createLocale();
   const github = await createGithubEndpoint();
@@ -94,7 +88,12 @@ export async function createApp() {
     github
   );
   const prefixPath = await resolve("./wineprefix"); // CHECK: hardcoded path?
-  const isOverseaVersion = (await Neutralino.os.getEnv("YAAGL_OVERSEA")) == "1";
+  const commandResult = await new Command("printenv", "YAAGL_OVERSEA").execute();
+  if (commandResult.code !== 0) {
+    throw new Error(commandResult.stderr);
+  }
+
+  const isOverseaVersion = commandResult.stdout == "1";
   const server = isOverseaVersion ? OS_SERVER : CN_SERVER;
   if (wineReady) {
     const wine = await createWine({
